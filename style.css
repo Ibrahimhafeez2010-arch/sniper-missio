@@ -206,3 +206,35 @@ body {
 #startButton:hover {
     background: #555;
 }
+/* Mission targets */
+.mission-target {
+    position: absolute;
+
+    width: 45px;
+    height: 90px;
+
+    background: #222;
+
+    border-radius: 20px 20px 8px 8px;
+
+    z-index: 5;
+
+    cursor: crosshair;
+}
+
+/* Target heads */
+.mission-target::before {
+    content: "";
+
+    position: absolute;
+
+    width: 30px;
+    height: 30px;
+
+    background: #c58b65;
+
+    border-radius: 50%;
+
+    top: -25px;
+    left: 7px;
+}
