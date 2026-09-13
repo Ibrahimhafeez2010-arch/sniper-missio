@@ -3,32 +3,105 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <title>Sniper Mission</title>
+
     <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
 
+    <!-- GAME -->
     <div id="game">
-        <div id="hud">
-            <div>MISSION 1</div>
-            <div id="status">READY</div>
+
+        <!-- Mission information -->
+        <div id="missionPanel">
+            <h1>🎯 MISSION 1</h1>
+            <p>Find and eliminate all targets</p>
         </div>
 
-        <div id="target"></div>
+        <!-- Target counter -->
+        <div id="targetCounter">
+            TARGETS: <span id="targetsHit">0</span> / <span id="totalTargets">5</span>
+        </div>
 
+        <!-- Crosshair -->
+        <div id="crosshair">
+            <div class="crosshair-horizontal"></div>
+            <div class="crosshair-vertical"></div>
+            <div class="crosshair-dot"></div>
+        </div>
+
+        <!-- Scope -->
         <div id="scope">
-            <div class="crosshair horizontal"></div>
-            <div class="crosshair vertical"></div>
-            <div class="scope-circle"></div>
+            <div id="scopeGlass"></div>
+            <div id="scopeCrosshair">
+                <div></div>
+                <span></span>
+            </div>
         </div>
 
-        <div id="message">
-            <h1>SNIPER MISSION</h1>
-            <p>Right-click and hold to aim</p>
-            <p>Left-click to fire</p>
-            <button id="startButton">START MISSION</button>
+        <!-- Targets will be created by JavaScript -->
+        <div id="targets"></div>
+
+        <!-- Start screen -->
+        <div id="startScreen">
+            <div class="startBox">
+
+                <h1>SNIPER MISSION</h1>
+
+                <p class="subtitle">
+                    CITY OPERATION
+                </p>
+
+                <div class="instructions">
+
+                    <p>🖱️ <b>Hold LEFT CLICK</b> — Aim</p>
+                    <p>🎯 <b>Move your mouse</b> — Aim around the city</p>
+                    <p>💥 <b>RIGHT CLICK</b> — Fire</p>
+                    <p>🏆 Hit all 5 targets to complete the mission</p>
+
+                </div>
+
+                <button id="startButton">
+                    START MISSION
+                </button>
+
+            </div>
         </div>
+
+        <!-- Mission complete -->
+        <div id="completeScreen">
+
+            <div class="completeBox">
+
+                <h1>MISSION COMPLETE!</h1>
+
+                <p>You eliminated all targets.</p>
+
+                <button id="restartButton">
+                    PLAY AGAIN
+                </button>
+
+            </div>
+
+        </div>
+
+        <!-- Bottom HUD -->
+        <div id="bottomHud">
+
+            <div>
+                STATUS:
+                <span id="status">READY</span>
+            </div>
+
+            <div>
+                AMMO:
+                <span id="ammo">∞</span>
+            </div>
+
+        </div>
+
     </div>
 
     <script src="game.js"></script>
