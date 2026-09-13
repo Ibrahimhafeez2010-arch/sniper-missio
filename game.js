@@ -1,204 +1,330 @@
 
 const game = document.getElementById("game");
 const scope = document.getElementById("scope");
-const message = document.getElementById("message");
-const startButton = document.getElementById("startButton");
-const status = document.getElementById("status");
+const crosshair = document.getElementById("crosshair");
 
-let aiming = false;
-let missionStarted = false;
+const startScreen = document.getElementById("startScreen");
+const completeScreen = document.getElementById("completeScreen");
+
+const startButton = document.getElementById("startButton");
+const restartButton = document.getElementById("restartButton");
+
+const targetsHitDisplay = document.getElementById("targetsHit");
+const statusDisplay = document.getElementById("status");
+
+const targetsContainer = document.getElementById("targets");
+
+
+// -----------------------------
+// GAME SETTINGS
+// -----------------------------
+
+const TOTAL_TARGETS = 5;
+
 let targetsHit = 0;
+let aiming = false;
+let gameRunning = false;
+
 let mouseX = window.innerWidth / 2;
 let mouseY = window.innerHeight / 2;
 
-const totalTargets = 5;
 
-// Stop the normal right-click menu
-game.addEventListener("contextmenu", (event) => {
-    event.preventDefault();
-});
+// -----------------------------
+// START GAME
+// -----------------------------
 
-// Start game
-startButton.addEventListener("click", () => {
-    message.style.display = "none";
-    missionStarted = true;
+startButton.addEventListener("click", startMission);
+
+restartButton.addEventListener("click", startMission);
+
+
+function startMission() {
+
     targetsHit = 0;
+    aiming = false;
+    gameRunning = true;
 
-    status.textContent = `TARGETS: 0 / ${totalTargets}`;
+    targetsHitDisplay.textContent = "0";
+    statusDisplay.textContent = "READY";
+
+    startScreen.style.display = "none";
+    completeScreen.style.display = "none";
+
+    scope.style.display = "none";
+    game.classList.remove("aiming");
 
     createTargets();
-});
+}
 
-// Create targets
+
+// -----------------------------
+// CREATE TARGETS
+// -----------------------------
+
 function createTargets() {
 
-    document.querySelectorAll(".mission-target").forEach(target => {
-        target.remove();
-    });
+    targetsContainer.innerHTML = "";
+
+    /*
+        These positions place the targets
+        around different parts of the city.
+    */
 
     const positions = [
-        { left: "15%", top: "50%" },
-        { left: "32%", top: "38%" },
-        { left: "50%", top: "52%" },
-        { left: "68%", top: "35%" },
-        { left: "83%", top: "48%" }
+
+        {
+            left: "18%",
+            top: "54%"
+        },
+
+        {
+            left: "35%",
+            top: "42%"
+        },
+
+        {
+            left: "52%",
+            top: "58%"
+        },
+
+        {
+            left: "68%",
+            top: "38%"
+        },
+
+        {
+            left: "84%",
+            top: "50%"
+        }
+
     ];
 
-    positions.forEach((position) => {
+
+    positions.forEach((position, index) => {
 
         const target = document.createElement("div");
 
         target.className = "mission-target";
 
+        target.dataset.target = index;
+
         target.style.left = position.left;
         target.style.top = position.top;
 
-        game.appendChild(target);
+
+        targetsContainer.appendChild(target);
+
     });
 }
 
-// Track mouse
-game.addEventListener("mousemove", (event) => {
+
+// -----------------------------
+// MOUSE MOVEMENT
+// -----------------------------
+
+game.addEventListener("mousemove", function(event) {
 
     mouseX = event.clientX;
     mouseY = event.clientY;
 
-    // Move scope crosshair with mouse
-    const horizontal = document.querySelector(".crosshair.horizontal");
-    const vertical = document.querySelector(".crosshair.vertical");
-    const circle = document.querySelector(".scope-circle");
 
-    if (horizontal && vertical && circle) {
+    if (aiming) {
 
-        horizontal.style.left = mouseX + "px";
-        horizontal.style.top = mouseY + "px";
+        crosshair.style.left = mouseX + "px";
+        crosshair.style.top = mouseY + "px";
 
-        vertical.style.left = mouseX + "px";
-        vertical.style.top = mouseY + "px";
-
-        circle.style.left = mouseX + "px";
-        circle.style.top = mouseY + "px";
     }
+
 });
 
-// LEFT CLICK = AIM
-game.addEventListener("mousedown", (event) => {
 
-    if (!missionStarted) return;
+// -----------------------------
+// LEFT CLICK = AIM
+// -----------------------------
+
+game.addEventListener("mousedown", function(event) {
+
+    if (!gameRunning) return;
+
+
+    // LEFT BUTTON
 
     if (event.button === 0) {
 
         aiming = true;
 
+        game.classList.add("aiming");
+
         scope.style.display = "block";
 
-        status.textContent = "AIMING";
+        statusDisplay.textContent = "AIMING";
+
+
+        crosshair.style.left = mouseX + "px";
+        crosshair.style.top = mouseY + "px";
+
     }
+
+
+    // RIGHT BUTTON = FIRE
+
+    if (event.button === 2) {
+
+        if (aiming) {
+
+            fire();
+
+        }
+
+    }
+
 });
 
-// Release left mouse = stop aiming
-game.addEventListener("mouseup", (event) => {
+
+// -----------------------------
+// RELEASE LEFT CLICK
+// -----------------------------
+
+game.addEventListener("mouseup", function(event) {
 
     if (event.button === 0) {
 
         aiming = false;
 
+        game.classList.remove("aiming");
+
         scope.style.display = "none";
 
-        if (missionStarted) {
-            status.textContent =
-                `TARGETS: ${targetsHit} / ${totalTargets}`;
+
+        if (gameRunning) {
+
+            statusDisplay.textContent = "READY";
+
         }
+
     }
+
 });
 
-// RIGHT CLICK = FIRE
-game.addEventListener("mousedown", (event) => {
 
-    if (!missionStarted) return;
+// -----------------------------
+// STOP RIGHT CLICK MENU
+// -----------------------------
 
-    if (event.button === 2 && aiming) {
+game.addEventListener("contextmenu", function(event) {
 
-        fire();
-    }
+    event.preventDefault();
+
 });
 
-// Fire at mouse position
+
+// -----------------------------
+// FIRE
+// -----------------------------
+
 function fire() {
 
-    const targets = document.querySelectorAll(".mission-target");
+    const targets =
+        document.querySelectorAll(".mission-target");
 
-    let hit = false;
 
-    targets.forEach((target) => {
+    let targetHit = false;
 
-        if (target.dataset.hit === "true") return;
 
-        const rect = target.getBoundingClientRect();
+    targets.forEach(function(target) {
 
-        // Check whether mouse is over target
+        if (targetHit) return;
+
+
+        const rectangle =
+            target.getBoundingClientRect();
+
+
+        /*
+            Check whether the crosshair
+            is over the target.
+        */
+
         if (
-            mouseX >= rect.left &&
-            mouseX <= rect.right &&
-            mouseY >= rect.top &&
-            mouseY <= rect.bottom
+
+            mouseX >= rectangle.left &&
+            mouseX <= rectangle.right &&
+
+            mouseY >= rectangle.top &&
+            mouseY <= rectangle.bottom
+
         ) {
 
-            target.dataset.hit = "true";
+            hitTarget(target);
 
-            target.classList.add("hit");
+            targetHit = true;
 
-            hit = true;
-
-            targetsHit++;
-
-            status.textContent =
-                `TARGETS: ${targetsHit} / ${totalTargets}`;
-
-            setTimeout(() => {
-                target.remove();
-            }, 150);
-
-            if (targetsHit === totalTargets) {
-                missionComplete();
-            }
         }
+
     });
 
-    // Small firing effect
-    if (!hit) {
-        status.textContent = "MISSED!";
+
+    if (!targetHit) {
+
+        statusDisplay.textContent = "MISSED";
+
     }
+
 }
 
-// Mission complete
+
+// -----------------------------
+// TARGET HIT
+// -----------------------------
+
+function hitTarget(target) {
+
+    targetsHit++;
+
+
+    target.classList.add("hit");
+
+
+    targetsHitDisplay.textContent =
+        targetsHit;
+
+
+    statusDisplay.textContent =
+        "TARGET HIT";
+
+
+    setTimeout(function() {
+
+        target.remove();
+
+    }, 180);
+
+
+    if (targetsHit >= TOTAL_TARGETS) {
+
+        setTimeout(missionComplete, 400);
+
+    }
+
+}
+
+
+// -----------------------------
+// MISSION COMPLETE
+// -----------------------------
+
 function missionComplete() {
 
-    missionStarted = false;
+    gameRunning = false;
+
     aiming = false;
 
     scope.style.display = "none";
 
-    message.style.display = "block";
+    game.classList.remove("aiming");
 
-    message.innerHTML = `
-        <h1>MISSION COMPLETE!</h1>
-        <p>You hit all ${totalTargets} targets!</p>
-        <button id="restartButton">PLAY AGAIN</button>
-    `;
+    statusDisplay.textContent = "COMPLETE";
 
-    document
-        .getElementById("restartButton")
-        .addEventListener("click", () => {
+    completeScreen.style.display = "flex";
 
-            message.style.display = "none";
-
-            missionStarted = true;
-            targetsHit = 0;
-
-            status.textContent =
-                `TARGETS: 0 / ${totalTargets}`;
-
-            createTargets();
-        });
 }
