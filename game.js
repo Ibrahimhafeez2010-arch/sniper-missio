@@ -1,6 +1,5 @@
 
 const game = document.getElementById("game");
-const targetContainer = document.getElementById("target");
 const scope = document.getElementById("scope");
 const message = document.getElementById("message");
 const startButton = document.getElementById("startButton");
@@ -8,124 +7,173 @@ const status = document.getElementById("status");
 
 let aiming = false;
 let missionStarted = false;
-let targets = [];
 let targetsHit = 0;
+let mouseX = window.innerWidth / 2;
+let mouseY = window.innerHeight / 2;
 
-// Prevent the normal right-click menu
-game.addEventListener("contextmenu", function(event) {
+const totalTargets = 5;
+
+// Stop the normal right-click menu
+game.addEventListener("contextmenu", (event) => {
     event.preventDefault();
 });
 
-// Start the mission
-startButton.addEventListener("click", function() {
-    missionStarted = true;
+// Start game
+startButton.addEventListener("click", () => {
     message.style.display = "none";
-    status.textContent = "TARGETS: 0 / 5";
+    missionStarted = true;
+    targetsHit = 0;
+
+    status.textContent = `TARGETS: 0 / ${totalTargets}`;
 
     createTargets();
 });
 
-// Create five targets
+// Create targets
 function createTargets() {
-    targets = [];
-    targetsHit = 0;
 
-    // Remove old targets
     document.querySelectorAll(".mission-target").forEach(target => {
         target.remove();
     });
 
     const positions = [
-        { left: "18%", top: "48%" },
-        { left: "35%", top: "38%" },
-        { left: "52%", top: "52%" },
-        { left: "70%", top: "42%" },
-        { left: "84%", top: "55%" }
+        { left: "15%", top: "50%" },
+        { left: "32%", top: "38%" },
+        { left: "50%", top: "52%" },
+        { left: "68%", top: "35%" },
+        { left: "83%", top: "48%" }
     ];
 
-    positions.forEach((position, index) => {
+    positions.forEach((position) => {
+
         const target = document.createElement("div");
 
         target.className = "mission-target";
-        target.dataset.id = index;
 
         target.style.left = position.left;
         target.style.top = position.top;
 
         game.appendChild(target);
-        targets.push(target);
     });
 }
 
+// Track mouse
+game.addEventListener("mousemove", (event) => {
+
+    mouseX = event.clientX;
+    mouseY = event.clientY;
+
+    // Move scope crosshair with mouse
+    const horizontal = document.querySelector(".crosshair.horizontal");
+    const vertical = document.querySelector(".crosshair.vertical");
+    const circle = document.querySelector(".scope-circle");
+
+    if (horizontal && vertical && circle) {
+
+        horizontal.style.left = mouseX + "px";
+        horizontal.style.top = mouseY + "px";
+
+        vertical.style.left = mouseX + "px";
+        vertical.style.top = mouseY + "px";
+
+        circle.style.left = mouseX + "px";
+        circle.style.top = mouseY + "px";
+    }
+});
+
 // LEFT CLICK = AIM
-game.addEventListener("mousedown", function(event) {
+game.addEventListener("mousedown", (event) => {
+
     if (!missionStarted) return;
 
     if (event.button === 0) {
+
         aiming = true;
+
         scope.style.display = "block";
+
         status.textContent = "AIMING";
     }
 });
 
-// Release left click = stop aiming
-game.addEventListener("mouseup", function(event) {
+// Release left mouse = stop aiming
+game.addEventListener("mouseup", (event) => {
+
     if (event.button === 0) {
+
         aiming = false;
+
         scope.style.display = "none";
 
         if (missionStarted) {
-            status.textContent = `TARGETS: ${targetsHit} / 5`;
+            status.textContent =
+                `TARGETS: ${targetsHit} / ${totalTargets}`;
         }
     }
 });
 
 // RIGHT CLICK = FIRE
-game.addEventListener("mousedown", function(event) {
+game.addEventListener("mousedown", (event) => {
+
     if (!missionStarted) return;
 
     if (event.button === 2 && aiming) {
+
         fire();
     }
 });
 
+// Fire at mouse position
 function fire() {
-    const crosshairX = window.innerWidth / 2;
-    const crosshairY = window.innerHeight / 2;
 
-    let hitTarget = null;
+    const targets = document.querySelectorAll(".mission-target");
 
-    targets.forEach(target => {
+    let hit = false;
+
+    targets.forEach((target) => {
+
         if (target.dataset.hit === "true") return;
 
         const rect = target.getBoundingClientRect();
 
+        // Check whether mouse is over target
         if (
-            crosshairX >= rect.left &&
-            crosshairX <= rect.right &&
-            crosshairY >= rect.top &&
-            crosshairY <= rect.bottom
+            mouseX >= rect.left &&
+            mouseX <= rect.right &&
+            mouseY >= rect.top &&
+            mouseY <= rect.bottom
         ) {
-            hitTarget = target;
+
+            target.dataset.hit = "true";
+
+            target.classList.add("hit");
+
+            hit = true;
+
+            targetsHit++;
+
+            status.textContent =
+                `TARGETS: ${targetsHit} / ${totalTargets}`;
+
+            setTimeout(() => {
+                target.remove();
+            }, 150);
+
+            if (targetsHit === totalTargets) {
+                missionComplete();
+            }
         }
     });
 
-    if (hitTarget) {
-        hitTarget.dataset.hit = "true";
-        hitTarget.style.display = "none";
-
-        targetsHit++;
-
-        status.textContent = `TARGETS: ${targetsHit} / 5`;
-
-        if (targetsHit === 5) {
-            missionComplete();
-        }
+    // Small firing effect
+    if (!hit) {
+        status.textContent = "MISSED!";
     }
 }
 
 // Mission complete
 function missionComplete() {
+
     missionStarted = false;
     aiming = false;
 
@@ -135,14 +183,22 @@ function missionComplete() {
 
     message.innerHTML = `
         <h1>MISSION COMPLETE!</h1>
-        <p>You hit all 5 targets.</p>
+        <p>You hit all ${totalTargets} targets!</p>
         <button id="restartButton">PLAY AGAIN</button>
     `;
 
-    document.getElementById("restartButton").addEventListener("click", function() {
-        message.style.display = "none";
-        missionStarted = true;
-        status.textContent = "TARGETS: 0 / 5";
-        createTargets();
-    });
+    document
+        .getElementById("restartButton")
+        .addEventListener("click", () => {
+
+            message.style.display = "none";
+
+            missionStarted = true;
+            targetsHit = 0;
+
+            status.textContent =
+                `TARGETS: 0 / ${totalTargets}`;
+
+            createTargets();
+        });
 }
